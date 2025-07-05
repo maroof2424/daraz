@@ -1,0 +1,150 @@
+{% extends 'base.html' %}
+{% load image_filters %}
+
+{% block title %}ShopMart - Online Shopping{% endblock %}
+
+{% block content %}
+<!-- Hero Section -->
+<section class="hero py-5" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white;">
+    <div class="container">
+        <div class="row align-items-center">
+            <div class="col-lg-6">
+                <h1 class="display-4 fw-bold mb-4">Welcome to ShopMart</h1>
+                <p class="lead mb-4">Discover amazing products at unbeatable prices. Shop now and save big!</p>
+                <a href="{% url 'product_list' %}" class="btn btn-light btn-lg">Shop Now</a>
+            </div>
+            <div class="col-lg-6">
+                <img src="https://th.bing.com/th/id/OIP.Z6E8LoURnxbr8y2MaqRUagHaE7?rs=1&pid=ImgDetMain" class="img-fluid rounded" alt="Shopping">
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Categories Section -->
+<section class="categories py-5">
+    <div class="container">
+        <h2 class="text-center mb-5">Shop by Category</h2>
+        <div class="row">
+            {% for category in categories %}
+                <div class="col-md-3 col-sm-6 mb-4">
+                    <div class="card h-100 text-center category-card">
+                        <div class="card-body">
+                            <i class="fas fa-{{ category.icon|default:'tag' }} fa-3x text-primary mb-3"></i>
+                            <h5 class="card-title">{{ category.name }}</h5>
+                            <a href="{% url 'product_list' %}?category={{ category.slug }}" 
+                               class="btn btn-outline-primary">Browse</a>
+                        </div>
+                    </div>
+                </div>
+            {% endfor %}
+        </div>
+    </div>
+</section>
+
+<!-- Featured Products -->
+<section class="featured-products py-5 bg-light">
+    <div class="container">
+        <h2 class="text-center mb-5">Featured Products</h2>
+        <div class="row">
+            {% for product in featured_products %}
+                <div class="col-lg-3 col-md-4 col-sm-6 mb-4">
+                    <div class="card product-card h-100">
+                        <div class="position-relative">
+                            {% with product.images.all|get_main_image as main_image %}
+                                <img src="{{ main_image.image.url|default:'https://via.placeholder.com/300x200' }}" 
+                                     class="card-img-top" alt="{{ product.name }}" style="height: 200px; object-fit: cover;">
+                            {% endwith %}
+                            {% if user.is_authenticated %}
+                                <button class="btn btn-outline-danger btn-sm position-absolute top-0 end-0 m-2 wishlist-btn" 
+                                        data-product-id="{{ product.id }}" onclick="toggleWishlist({{ product.id }})">
+                                    <i class="far fa-heart"></i>
+                                </button>
+                            {% endif %}
+                        </div>
+                        <div class="card-body d-flex flex-column">
+                            <h6 class="card-title">{{ product.name|truncatechars:50 }}</h6>
+                            <p class="text-muted small">{{ product.vendor.business_name }}</p>
+                            <div class="mt-auto">
+                                <div class="d-flex justify-content-between align-items-center mb-2">
+                                    <span class="h5 text-primary mb-0">₹{{ product.price }}</span>
+                                    {% if product.rating %}
+                                        <small class="text-warning">
+                                            {% for i in "12345" %}
+                                                {% if forloop.counter <= product.rating %}
+                                                    <i class="fas fa-star"></i>
+                                                {% else %}
+                                                    <i class="far fa-star"></i>
+                                                {% endif %}
+                                            {% endfor %}
+                                        </small>
+                                    {% endif %}
+                                </div>
+                                <div class="d-grid gap-2">
+                                    <a href="{% url 'product_detail' product.slug %}" class="btn btn-outline-primary btn-sm">View Details</a>
+                                    {% if user.is_authenticated %}
+                                        <button class="btn btn-primary btn-sm" onclick="addToCart({{ product.id }})">Add to Cart</button>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            {% endfor %}
+        </div>
+        <div class="text-center mt-4">
+            <a href="{% url 'product_list' %}" class="btn btn-primary btn-lg">View All Products</a>
+        </div>
+    </div>
+</section>
+
+<!-- Best Selling Products -->
+<section class="best-selling py-5">
+    <div class="container">
+        <h2 class="text-center mb-5">Best Selling Products</h2>
+        <div class="row">
+            {% for product in best_selling %}
+                <div class="col-lg-3 col-md-4 col-sm-6 mb-4">
+                    <div class="card product-card h-100">
+                        {% with product.images.all|get_main_image as main_image %}
+                            <img src="{{ main_image.image.url|default:'https://via.placeholder.com/300x200' }}" 
+                                 class="card-img-top" alt="{{ product.name }}" style="height: 200px; object-fit: cover;">
+                        {% endwith %}
+                        <div class="card-body">
+                            <h6 class="card-title">{{ product.name|truncatechars:50 }}</h6>
+                            <p class="text-primary h6">₹{{ product.price }}</p>
+                            <a href="{% url 'product_detail' product.slug %}" class="btn btn-outline-primary btn-sm">View Details</a>
+                        </div>
+                    </div>
+                </div>
+            {% endfor %}
+        </div>
+    </div>
+</section>
+
+<!-- New Arrivals -->
+<section class="new-arrivals py-5 bg-light">
+    <div class="container">
+        <h2 class="text-center mb-5">New Arrivals</h2>
+        <div class="row">
+            {% for product in new_arrivals %}
+                <div class="col-lg-3 col-md-4 col-sm-6 mb-4">
+                    <div class="card product-card h-100">
+                        <div class="position-relative">
+                            {% with product.images.all|get_main_image as main_image %}
+                                <img src="{{ main_image.image.url|default:'https://via.placeholder.com/300x200' }}" 
+                                     class="card-img-top" alt="{{ product.name }}" style="height: 200px; object-fit: cover;">
+                            {% endwith %}
+                            <span class="badge bg-success position-absolute top-0 start-0 m-2">New</span>
+                        </div>
+                        <div class="card-body">
+                            <h6 class="card-title">{{ product.name|truncatechars:50 }}</h6>
+                            <p class="text-primary h6">₹{{ product.price }}</p>
+                            <a href="{% url 'product_detail' product.slug %}" class="btn btn-outline-primary btn-sm">View Details</a>
+                        </div>
+                    </div>
+                </div>
+            {% endfor %}
+        </div>
+    </div>
+</section>
+{% endblock %}

@@ -1,0 +1,138 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}My Wishlist - Daraz Clone{% endblock %}
+
+{% block content %}
+<div class="container mx-auto px-4 py-8">
+    <div class="max-w-6xl mx-auto">
+        <!-- Header -->
+        <div class="flex items-center justify-between mb-8">
+            <h1 class="text-3xl font-bold text-gray-900">My Wishlist</h1>
+            <div class="text-sm text-gray-500">
+                {{ wishlist_items|length }} item{{ wishlist_items|length|pluralize }}
+            </div>
+        </div>
+
+        {% if wishlist_items %}
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+                {% for item in wishlist_items %}
+                <div class="bg-white rounded-lg shadow-md overflow-hidden hover:shadow-lg transition-shadow duration-300">
+                    <div class="relative">
+                        {% if item.product.images.first %}
+                            <img src="{{ item.product.images.first.image.url }}" 
+                                 alt="{{ item.product.name }}" 
+                                 class="w-full h-48 object-cover">
+                        {% else %}
+                            <div class="w-full h-48 bg-gray-200 flex items-center justify-center">
+                                <span class="text-gray-400">No Image</span>
+                            </div>
+                        {% endif %}
+                        
+                        <!-- Remove from wishlist button -->
+                        <button onclick="toggleWishlist({{ item.product.id }})" 
+                                class="absolute top-2 right-2 p-2 bg-white rounded-full shadow-md hover:bg-red-50 transition-colors">
+                            <svg class="w-5 h-5 text-red-500" fill="currentColor" viewBox="0 0 20 20">
+                                <path fill-rule="evenodd" d="M3.172 5.172a4 4 0 015.656 0L10 6.343l1.172-1.171a4 4 0 115.656 5.656L10 17.657l-6.828-6.829a4 4 0 010-5.656z" clip-rule="evenodd"></path>
+                            </svg>
+                        </button>
+                    </div>
+                    
+                    <div class="p-4">
+                        <h3 class="font-semibold text-gray-900 text-sm mb-2 line-clamp-2">
+                            <a href="{% url 'product_detail' item.product.slug %}" class="hover:text-orange-600">
+                                {{ item.product.name }}
+                            </a>
+                        </h3>
+                        
+                        <div class="flex items-center mb-2">
+                            <div class="flex text-yellow-400 text-sm">
+                                {% for i in "12345" %}
+                                    {% if forloop.counter <= item.product.rating %}
+                                        <svg class="w-4 h-4 fill-current" viewBox="0 0 20 20">
+                                            <path d="M10 15l-5.878 3.09 1.123-6.545L.489 6.91l6.572-.955L10 0l2.939 5.955 6.572.955-4.756 4.635 1.123 6.545z"/>
+                                        </svg>
+                                    {% else %}
+                                        <svg class="w-4 h-4 text-gray-300 fill-current" viewBox="0 0 20 20">
+                                            <path d="M10 15l-5.878 3.09 1.123-6.545L.489 6.91l6.572-.955L10 0l2.939 5.955 6.572.955-4.756 4.635 1.123 6.545z"/>
+                                        </svg>
+                                    {% endif %}
+                                {% endfor %}
+                            </div>
+                            <span class="text-sm text-gray-500 ml-1">({{ item.product.review_count }})</span>
+                        </div>
+                        
+                        <div class="flex items-center justify-between">
+                            <div class="text-lg font-bold text-orange-600">
+                                Rs. {{ item.product.price|floatformat:0 }}
+                            </div>
+                            
+                            <button onclick="addToCart({{ item.product.id }})" 
+                                    class="bg-orange-500 text-white px-4 py-2 rounded-md text-sm hover:bg-orange-600 transition-colors">
+                                Add to Cart
+                            </button>
+                        </div>
+                        
+                        <div class="text-xs text-gray-500 mt-2">
+                            Added {{ item.created_at|date:"M d, Y" }}
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        {% else %}
+            <div class="text-center py-16">
+                <svg class="w-24 h-24 text-gray-300 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"></path>
+                </svg>
+                <h3 class="text-xl font-semibold text-gray-900 mb-2">Your wishlist is empty</h3>
+                <p class="text-gray-500 mb-6">Start adding products you love to your wishlist</p>
+                <a href="{% url 'product_list' %}" class="bg-orange-500 text-white px-6 py-3 rounded-md hover:bg-orange-600 transition-colors">
+                    Browse Products
+                </a>
+            </div>
+        {% endif %}
+    </div>
+</div>
+
+<script>
+function toggleWishlist(productId) {
+    fetch('{% url "toggle_wishlist" %}', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': '{{ csrf_token }}'
+        },
+        body: JSON.stringify({
+            'product_id': productId
+        })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            location.reload();
+        }
+    });
+}
+
+function addToCart(productId) {
+    fetch('{% url "add_to_cart" %}', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': '{{ csrf_token }}'
+        },
+        body: JSON.stringify({
+            'product_id': productId,
+            'quantity': 1
+        })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            alert('Product added to cart!');
+        }
+    });
+}
+</script>
+{% endblock %}

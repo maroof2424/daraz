@@ -1,0 +1,303 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}ShopMart - Online Shopping{% endblock %}</title>
+
+    <!-- Bootstrap & FontAwesome CDN -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+
+    <!-- Custom Styles -->
+    <style>
+        :root {
+            --primary-color: #ff6b35;
+            --secondary-color: #f7931e;
+            --dark-color: #2c3e50;
+            --light-color: #ecf0f1;
+        }
+
+        .navbar-brand {
+            font-weight: bold;
+            color: var(--primary-color) !important;
+        }
+
+        .btn-primary {
+            background-color: var(--primary-color);
+            border-color: var(--primary-color);
+        }
+
+        .btn-primary:hover {
+            background-color: var(--secondary-color);
+            border-color: var(--secondary-color);
+        }
+
+        .product-card {
+            transition: transform 0.3s ease;
+            border: none;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+
+        .product-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 5px 20px rgba(0,0,0,0.15);
+        }
+
+        .footer {
+            background-color: var(--dark-color);
+            color: white;
+            margin-top: 50px;
+        }
+
+        .search-bar {
+            position: relative;
+        }
+
+        .search-suggestions {
+            position: absolute;
+            top: 100%;
+            left: 0;
+            right: 0;
+            background: white;
+            border: 1px solid #ddd;
+            border-top: none;
+            max-height: 300px;
+            overflow-y: auto;
+            z-index: 1000;
+            display: none;
+        }
+
+        .search-suggestions .suggestion-item {
+            padding: 10px 15px;
+            cursor: pointer;
+            border-bottom: 1px solid #eee;
+        }
+
+        .search-suggestions .suggestion-item:hover {
+            background-color: #f8f9fa;
+        }
+    </style>
+    {% block extra_css %}{% endblock %}
+</head>
+<body>
+
+<!-- Navbar -->
+<nav class="navbar navbar-expand-lg navbar-light bg-light sticky-top">
+    <div class="container">
+        <a class="navbar-brand" href="{% url 'home' %}">
+            <i class="fas fa-shopping-bag me-2"></i>ShopMart
+        </a>
+
+        <!-- Search Bar -->
+        <div class="flex-grow-1 mx-4">
+            <div class="search-bar">
+                <div class="input-group">
+                    <input type="text" class="form-control" id="search-input" 
+                           placeholder="Search products..." value="{{ request.GET.search }}">
+                    <button class="btn btn-primary" type="button" id="search-btn">
+                        <i class="fas fa-search"></i>
+                    </button>
+                </div>
+                <div class="search-suggestions" id="search-suggestions"></div>
+            </div>
+        </div>
+
+        <!-- User Actions -->
+        <div class="d-flex align-items-center">
+            {% if user.is_authenticated %}
+                <a href="{% url 'wishlist' %}" class="btn btn-outline-primary me-2">
+                    <i class="fas fa-heart"></i> Wishlist
+                </a>
+                <a href="{% url 'cart_view' %}" class="btn btn-outline-primary me-2">
+                    <i class="fas fa-shopping-cart"></i> Cart
+                    <span class="badge bg-danger" id="cart-count">0</span>
+                </a>
+                <div class="dropdown">
+                    <button class="btn btn-primary dropdown-toggle" type="button" data-bs-toggle="dropdown">
+                        <i class="fas fa-user"></i> {{ user.username }}
+                    </button>
+                    <ul class="dropdown-menu">
+                        <li><a class="dropdown-item" href="{% url 'order_history' %}">My Orders</a></li>
+                        {% if user.user_type == 'vendor' %}
+                            <li><a class="dropdown-item" href="{% url 'vendor_dashboard' %}">Vendor Dashboard</a></li>
+                        {% endif %}
+                        <li><hr class="dropdown-divider"></li>
+                        <li><a class="dropdown-item" href="{% url 'logout' %}">Logout</a></li>
+                    </ul>
+                </div>
+            {% else %}
+                <a href="{% url 'login' %}" class="btn btn-outline-primary me-2">Login</a>
+                <a href="{% url 'register' %}" class="btn btn-primary">Register</a>
+            {% endif %}
+        </div>
+    </div>
+</nav>
+
+<!-- Categories Navigation -->
+<nav class="navbar navbar-expand-lg navbar-dark" style="background-color: var(--dark-color);">
+    <div class="container">
+        <div class="navbar-nav">
+            <a class="nav-link" href="{% url 'home' %}">Home</a>
+            <a class="nav-link" href="{% url 'product_list' %}">All Products</a>
+            <a class="nav-link" href="{% url 'product_list' %}?category=electronics">Electronics</a>
+            <a class="nav-link" href="{% url 'product_list' %}?category=fashion">Fashion</a>
+            <a class="nav-link" href="{% url 'product_list' %}?category=home">Home & Garden</a>
+            <a class="nav-link" href="{% url 'product_list' %}?category=sports">Sports</a>
+        </div>
+    </div>
+</nav>
+
+<!-- Messages -->
+{% if messages %}
+    <div class="container mt-3">
+        {% for message in messages %}
+            <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+                {{ message }}
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            </div>
+        {% endfor %}
+    </div>
+{% endif %}
+
+<!-- Main Page Content -->
+<main>
+    {% block content %}{% endblock %}
+</main>
+
+<!-- Footer -->
+<footer class="footer py-5">
+    <div class="container">
+        <div class="row">
+            <div class="col-md-3">
+                <h5>ShopMart</h5>
+                <p>Your trusted online shopping destination</p>
+            </div>
+            <div class="col-md-3">
+                <h5>Quick Links</h5>
+                <ul class="list-unstyled">
+                    <li><a href="#" class="text-light">About Us</a></li>
+                    <li><a href="#" class="text-light">Contact</a></li>
+                    <li><a href="#" class="text-light">FAQ</a></li>
+                </ul>
+            </div>
+            <div class="col-md-3">
+                <h5>Categories</h5>
+                <ul class="list-unstyled">
+                    <li><a href="#" class="text-light">Electronics</a></li>
+                    <li><a href="#" class="text-light">Fashion</a></li>
+                    <li><a href="#" class="text-light">Home & Garden</a></li>
+                </ul>
+            </div>
+            <div class="col-md-3">
+                <h5>Follow Us</h5>
+                <a href="#" class="text-light me-3"><i class="fab fa-facebook"></i></a>
+                <a href="#" class="text-light me-3"><i class="fab fa-twitter"></i></a>
+                <a href="#" class="text-light me-3"><i class="fab fa-instagram"></i></a>
+            </div>
+        </div>
+        <hr class="my-4">
+        <div class="text-center">
+            <p>&copy; 2024 ShopMart. All rights reserved.</p>
+        </div>
+    </div>
+</footer>
+
+<!-- Scripts -->
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+
+<script>
+    // CSRF Setup
+    $.ajaxSetup({
+        headers: {
+            'X-CSRFToken': '{{ csrf_token }}'
+        }
+    });
+
+    // Search input suggestion
+    $('#search-input').on('input', function () {
+        const query = $(this).val();
+        if (query.length >= 2) {
+            $.get('{% url "search_suggestions" %}', { q: query }, function (data) {
+                const suggestions = $('#search-suggestions');
+                suggestions.empty();
+                if (data.length > 0) {
+                    data.forEach(function (item) {
+                        suggestions.append(`<div class="suggestion-item" data-slug="${item.slug}">${item.name}</div>`);
+                    });
+                    suggestions.show();
+                } else {
+                    suggestions.hide();
+                }
+            });
+        } else {
+            $('#search-suggestions').hide();
+        }
+    });
+
+    // Suggestion click
+    $(document).on('click', '.suggestion-item', function () {
+        const slug = $(this).data('slug');
+        window.location.href = `/product/${slug}/`;
+    });
+
+    // Search button
+    $('#search-btn').click(function () {
+        const query = $('#search-input').val();
+        if (query) {
+            window.location.href = `{% url "product_list" %}?search=${encodeURIComponent(query)}`;
+        }
+    });
+
+    // Hide suggestions when clicking outside
+    $(document).click(function (e) {
+        if (!$(e.target).closest('.search-bar').length) {
+            $('#search-suggestions').hide();
+        }
+    });
+
+    // Add to cart
+    function addToCart(productId, variationId = null, quantity = 1) {
+        $.ajax({
+            url: '{% url "add_to_cart" %}',
+            method: 'POST',
+            data: JSON.stringify({ product_id: productId, variation_id: variationId, quantity: quantity }),
+            contentType: 'application/json',
+            success: function (response) {
+                if (response.success) {
+                    $('#cart-count').text(response.cart_count);
+                    alert(response.message);
+                } else {
+                    alert(response.message);
+                }
+            }
+        });
+    }
+
+    // Toggle wishlist
+    function toggleWishlist(productId) {
+        $.ajax({
+            url: '{% url "toggle_wishlist" %}',
+            method: 'POST',
+            data: JSON.stringify({ product_id: productId }),
+            contentType: 'application/json',
+            success: function (response) {
+                const icon = $(`.wishlist-btn[data-product-id="${productId}"] i`);
+                if (response.success) {
+                    if (response.in_wishlist) {
+                        icon.removeClass('far').addClass('fas');
+                    } else {
+                        icon.removeClass('fas').addClass('far');
+                    }
+                    alert(response.message);
+                }
+            }
+        });
+    }
+</script>
+
+{% block extra_js %}{% endblock %}
+</body>
+</html>

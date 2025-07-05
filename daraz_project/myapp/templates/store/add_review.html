@@ -1,0 +1,256 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}{% if existing_review %}Edit Review{% else %}Add Review{% endif %} - {{ product.name }}{% endblock %}
+
+{% block content %}
+<div class="container mx-auto px-4 py-8">
+    <div class="max-w-3xl mx-auto">
+        <!-- Header -->
+        <div class="mb-8">
+            <a href="{% url 'product_detail' product.slug %}" 
+               class="inline-flex items-center text-orange-600 hover:text-orange-800 mb-4">
+                <svg class="mr-2 w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path>
+                </svg>
+                Back to Product
+            </a>
+            <h1 class="text-3xl font-bold text-gray-900">
+                {% if existing_review %}Edit Your Review{% else %}Write a Review{% endif %}
+            </h1>
+        </div>
+
+        <!-- Product Info -->
+        <div class="bg-white rounded-lg shadow-md p-6 mb-8">
+            <div class="flex items-center space-x-4">
+                <div class="flex-shrink-0">
+                    {% if product.images.first %}
+                        <img src="{{ product.images.first.image.url }}" 
+                             alt="{{ product.name }}" 
+                             class="w-20 h-20 object-cover rounded-md">
+                    {% else %}
+                        <div class="w-20 h-20 bg-gray-200 rounded-md flex items-center justify-center">
+                            <span class="text-sm text-gray-400">No Image</span>
+                        </div>
+                    {% endif %}
+                </div>
+                
+                <div class="flex-1">
+                    <h2 class="text-lg font-semibold text-gray-900">{{ product.name }}</h2>
+                    <p class="text-gray-600">{{ product.category.name }}</p>
+                    <div class="flex items-center mt-2">
+                        <span class="text-lg font-bold text-orange-600">Rs. {{ product.price|floatformat:0 }}</span>
+                        {% if has_purchased %}
+                            <span class="ml-4 inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                                <svg class="mr-1 w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
+                                    <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"></path>
+                                </svg>
+                                Verified Purchase
+                            </span>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Review Form -->
+        <div class="bg-white rounded-lg shadow-md p-6">
+            {% if not has_purchased %}
+                <div class="bg-yellow-50 border border-yellow-200 rounded-md p-4 mb-6">
+                    <div class="flex">
+                        <div class="flex-shrink-0">
+                            <svg class="w-5 h-5 text-yellow-400" viewBox="0 0 20 20" fill="currentColor">
+                                <path fill-rule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clip-rule="evenodd"></path>
+                            </svg>
+                        </div>
+                        <div class="ml-3">
+                            <h3 class="text-sm font-medium text-yellow-800">Note</h3>
+                            <p class="mt-1 text-sm text-yellow-700">
+                                You haven't purchased this product yet. Your review won't be marked as a verified purchase.
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            {% endif %}
+
+            <form method="post" class="space-y-6">
+                {% csrf_token %}
+                
+                <!-- Rating -->
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">
+                        Rating <span class="text-red-500">*</span>
+                    </label>
+                    <div class="flex items-center space-x-1">
+                        {% for i in "12345" %}
+                            <button type="button" 
+                                    onclick="setRating({{ forloop.counter }})"
+                                    class="star-btn text-3xl text-gray-300 hover:text-yellow-400 transition-colors focus:outline-none"
+                                    data-rating="{{ forloop.counter }}">
+                                ★
+                            </button>
+                        {% endfor %}
+                        <span id="rating-text" class="ml-3 text-sm text-gray-600"></span>
+                    </div>
+                    <input type="hidden" name="rating" id="rating-input" value="{% if form.rating.value %}{{ form.rating.value }}{% endif %}" required>
+                    {% if form.rating.errors %}
+                        <p class="mt-1 text-sm text-red-600">{{ form.rating.errors.0 }}</p>
+                    {% endif %}
+                </div>
+
+                <!-- Review Title -->
+                <div>
+                    <label for="id_title" class="block text-sm font-medium text-gray-700 mb-2">
+                        Review Title <span class="text-red-500">*</span>
+                    </label>
+                    <input type="text" 
+                           name="title" 
+                           id="id_title"
+                           value="{% if form.title.value %}{{ form.title.value }}{% endif %}"
+                           placeholder="Summarize your experience"
+                           class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-orange-500 focus:border-orange-500"
+                           required>
+                    {% if form.title.errors %}
+                        <p class="mt-1 text-sm text-red-600">{{ form.title.errors.0 }}</p>
+                    {% endif %}
+                </div>
+
+                <!-- Review Comment -->
+                <div>
+                    <label for="id_comment" class="block text-sm font-medium text-gray-700 mb-2">
+                        Your Review <span class="text-red-500">*</span>
+                    </label>
+                    <textarea name="comment" 
+                              id="id_comment"
+                              rows="6"
+                              placeholder="Tell others about your experience with this product. What did you like or dislike? What should others know before buying?"
+                              class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-orange-500 focus:border-orange-500"
+                              required>{% if form.comment.value %}{{ form.comment.value }}{% endif %}</textarea>
+                    {% if form.comment.errors %}
+                        <p class="mt-1 text-sm text-red-600">{{ form.comment.errors.0 }}</p>
+                    {% endif %}
+                    <p class="mt-1 text-sm text-gray-500">Minimum 10 characters required</p>
+                </div>
+
+                <!-- Review Guidelines -->
+                <div class="bg-gray-50 border border-gray-200 rounded-md p-4">
+                    <h4 class="text-sm font-medium text-gray-900 mb-2">Review Guidelines</h4>
+                    <ul class="text-sm text-gray-600 space-y-1">
+                        <li>• Be honest and fair in your review</li>
+                        <li>• Focus on the product features and your experience</li>
+                        <li>• Avoid inappropriate language or personal attacks</li>
+                        <li>• Don't include personal information</li>
+                        <li>• Reviews are moderated and may take time to appear</li>
+                    </ul>
+                </div>
+
+                <!-- Submit Buttons -->
+                <div class="flex flex-col sm:flex-row gap-4 pt-6">
+                    <button type="submit" 
+                            class="flex-1 sm:flex-none bg-orange-500 text-white px-8 py-3 rounded-md hover:bg-orange-600 transition-colors font-medium">
+                        {% if existing_review %}Update Review{% else %}Submit Review{% endif %}
+                    </button>
+                    
+                    <a href="{% url 'product_detail' product.slug %}" 
+                       class="flex-1 sm:flex-none text-center px-8 py-3 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50 transition-colors font-medium">
+                        Cancel
+                    </a>
+                </div>
+            </form>
+        </div>
+
+        {% if existing_review %}
+        <!-- Existing Review Preview -->
+        <div class="mt-8 bg-blue-50 border border-blue-200 rounded-lg p-6">
+            <h3 class="text-lg font-semibold text-blue-900 mb-4">Your Current Review</h3>
+            <div class="bg-white rounded-md p-4">
+                <div class="flex items-center mb-2">
+                    <div class="flex text-yellow-400">
+                        {% for i in "12345" %}
+                            {% if forloop.counter <= existing_review.rating %}
+                                <svg class="w-4 h-4 fill-current" viewBox="0 0 20 20">
+                                    <path d="M10 15l-5.878 3.09 1.123-6.545L.489 6.91l6.572-.955L10 0l2.939 5.955 6.572.955-4.756 4.635 1.123 6.545z"/>
+                                </svg>
+                            {% else %}
+                                <svg class="w-4 h-4 text-gray-300 fill-current" viewBox="0 0 20 20">
+                                    <path d="M10 15l-5.878 3.09 1.123-6.545L.489 6.91l6.572-.955L10 0l2.939 5.955 6.572.955-4.756 4.635 1.123 6.545z"/>
+                                </svg>
+                            {% endif %}
+                        {% endfor %}
+                    </div>
+                    <span class="ml-2 text-sm text-gray-600">{{ existing_review.created_at|date:"M d, Y" }}</span>
+                </div>
+                <h4 class="font-semibold text-gray-900 mb-1">{{ existing_review.title }}</h4>
+                <p class="text-gray-700">{{ existing_review.comment }}</p>
+            </div>
+        </div>
+        {% endif %}
+    </div>
+</div>
+
+<script>
+const ratingButtons = document.querySelectorAll('.star-btn');
+const ratingInput = document.getElementById('rating-input');
+const ratingText = document.getElementById('rating-text');
+
+const ratingLabels = {
+    1: 'Poor',
+    2: 'Fair', 
+    3: 'Good',
+    4: 'Very Good',
+    5: 'Excellent'
+};
+
+function setRating(rating) {
+    // Update input value
+    ratingInput.value = rating;
+    
+    // Update visual stars
+    ratingButtons.forEach((btn, index) => {
+        if (index < rating) {
+            btn.classList.remove('text-gray-300');
+            btn.classList.add('text-yellow-400');
+        } else {
+            btn.classList.remove('text-yellow-400');
+            btn.classList.add('text-gray-300');
+        }
+    });
+    
+    // Update rating text
+    ratingText.textContent = ratingLabels[rating];
+}
+
+// Initialize rating on page load
+document.addEventListener('DOMContentLoaded', function() {
+    const currentRating = ratingInput.value;
+    if (currentRating) {
+        setRating(parseInt(currentRating));
+    }
+});
+
+// Form validation
+document.querySelector('form').addEventListener('submit', function(e) {
+    const rating = ratingInput.value;
+    const title = document.getElementById('id_title').value.trim();
+    const comment = document.getElementById('id_comment').value.trim();
+    
+    if (!rating) {
+        e.preventDefault();
+        alert('Please select a rating');
+        return;
+    }
+    
+    if (!title) {
+        e.preventDefault();
+        alert('Please enter a review title');
+        return;
+    }
+    
+    if (comment.length < 10) {
+        e.preventDefault();
+        alert('Review comment must be at least 10 characters long');
+        return;
+    }
+});
+</script>
+{% endblock %}

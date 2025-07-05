@@ -1,0 +1,10 @@
+Django>=4.2
+Pillow
+python-decouple
+dj-database-url
+django-crispy-forms
+django-filter
+django-debug-toolbar
+gunicorn
+whitenoise
+psycopg2-binary

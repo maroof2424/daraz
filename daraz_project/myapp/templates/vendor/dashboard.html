@@ -1,0 +1,109 @@
+{% extends 'base.html' %}
+
+{% block title %}Vendor Dashboard - ShopMart{% endblock %}
+
+{% block content %}
+<div class="container my-5">
+    <div class="row">
+        <!-- Sidebar -->
+        <div class="col-md-3">
+            <div class="card">
+                <div class="card-header">
+                    <h5>Vendor Menu</h5>
+                </div>
+                <div class="list-group list-group-flush">
+                    <a href="{% url 'vendor_dashboard' %}" class="list-group-item list-group-item-action active">
+                        <i class="fas fa-tachometer-alt me-2"></i>Dashboard
+                    </a>
+                    <a href="{% url 'vendor_products' %}" class="list-group-item list-group-item-action">
+                        <i class="fas fa-box me-2"></i>Products
+                    </a>
+                    <a href="{% url 'vendor_orders' %}" class="list-group-item list-group-item-action">
+                        <i class="fas fa-shopping-bag me-2"></i>Orders
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <!-- Main Content -->
+        <div class="col-md-9">
+            <h2>Vendor Dashboard</h2>
+            <p class="text-muted">Welcome back, {{ vendor.business_name }}!</p>
+
+            <!-- Statistics Cards -->
+            <div class="row mb-4">
+                <div class="col-md-4">
+                    <div class="card text-center">
+                        <div class="card-body">
+                            <i class="fas fa-box fa-2x text-primary mb-2"></i>
+                            <h3>{{ total_products }}</h3>
+                            <p class="text-muted">Total Products</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="card text-center">
+                        <div class="card-body">
+                            <i class="fas fa-shopping-bag fa-2x text-success mb-2"></i>
+                            <h3>{{ total_orders }}</h3>
+                            <p class="text-muted">Total Orders</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="card text-center">
+                        <div class="card-body">
+                            <i class="fas fa-clock fa-2x text-warning mb-2"></i>
+                            <h3>{{ pending_orders }}</h3>
+                            <p class="text-muted">Pending Orders</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Recent Orders -->
+            <div class="card">
+                <div class="card-header">
+                    <h5>Recent Orders</h5>
+                </div>
+                <div class="card-body">
+                    {% if recent_orders %}
+                        <div class="table-responsive">
+                            <table class="table">
+                                <thead>
+                                    <tr>
+                                        <th>Order ID</th>
+                                        <th>Product</th>
+                                        <th>Customer</th>
+                                        <th>Status</th>
+                                        <th>Total</th>
+                                        <th>Date</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for order_item in recent_orders %}
+                                        <tr>
+                                            <td>{{ order_item.order.order_id }}</td>
+                                            <td>{{ order_item.product.name|truncatechars:30 }}</td>
+                                            <td>{{ order_item.order.user.username }}</td>
+                                            <td>
+                                                <span class="badge bg-{{ order_item.order.status|default:'secondary' }}">
+                                                    {{ order_item.order.get_status_display }}
+                                                </span>
+                                            </td>
+                                            <td>₹{{ order_item.total_price }}</td>
+                                            <td>{{ order_item.order.created_at|date:"M d, Y" }}</td>
+                                        </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    {% else %}
+                        <p class="text-muted">No recent orders.</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

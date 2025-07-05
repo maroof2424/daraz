@@ -1,0 +1,460 @@
+{% extends 'base.html' %}
+
+{% block title %}Add New Product - ShopMart{% endblock %}
+
+{% block extra_css %}
+<style>
+    .form-container {
+        background: white;
+        border-radius: 10px;
+        box-shadow: 0 2px 20px rgba(0,0,0,0.1);
+        padding: 30px;
+        margin: 20px 0;
+    }
+    
+    .form-group {
+        margin-bottom: 20px;
+    }
+    
+    .form-label {
+        font-weight: 600;
+        color: var(--dark-color);
+        margin-bottom: 8px;
+    }
+    
+    .form-control, .form-select {
+        border: 2px solid #e3e6f0;
+        border-radius: 8px;
+        padding: 12px 15px;
+        transition: all 0.3s ease;
+    }
+    
+    .form-control:focus, .form-select:focus {
+        border-color: var(--primary-color);
+        box-shadow: 0 0 0 0.2rem rgba(255, 107, 53, 0.25);
+    }
+    
+    .is-invalid {
+        border-color: #dc3545;
+    }
+    
+    .upload-area {
+        border: 2px dashed #ddd;
+        border-radius: 8px;
+        padding: 40px;
+        text-align: center;
+        background: #f8f9fa;
+        transition: all 0.3s ease;
+        cursor: pointer;
+    }
+    
+    .upload-area:hover {
+        border-color: var(--primary-color);
+        background: rgba(255, 107, 53, 0.05);
+    }
+    
+    .upload-area.dragover {
+        border-color: var(--primary-color);
+        background: rgba(255, 107, 53, 0.1);
+    }
+    
+    .image-preview-container {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 10px;
+        margin-top: 15px;
+    }
+    
+    .image-preview {
+        position: relative;
+        width: 120px;
+        height: 120px;
+        border-radius: 8px;
+        overflow: hidden;
+        border: 2px solid #ddd;
+    }
+    
+    .image-preview img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+    }
+    
+    .image-preview .remove-image {
+        position: absolute;
+        top: 5px;
+        right: 5px;
+        background: rgba(220, 53, 69, 0.8);
+        color: white;
+        border: none;
+        border-radius: 50%;
+        width: 25px;
+        height: 25px;
+        font-size: 12px;
+        cursor: pointer;
+    }
+    
+    .btn-save {
+        background: linear-gradient(45deg, var(--primary-color), var(--secondary-color));
+        border: none;
+        padding: 12px 30px;
+        border-radius: 25px;
+        font-weight: 600;
+        color: white;
+        transition: all 0.3s ease;
+    }
+    
+    .btn-save:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 5px 15px rgba(255, 107, 53, 0.4);
+        color: white;
+    }
+    
+    .btn-cancel {
+        background: #6c757d;
+        border: none;
+        padding: 12px 30px;
+        border-radius: 25px;
+        font-weight: 600;
+        color: white;
+        text-decoration: none;
+        display: inline-block;
+        transition: all 0.3s ease;
+    }
+    
+    .btn-cancel:hover {
+        background: #5a6268;
+        transform: translateY(-2px);
+        color: white;
+    }
+    
+    .section-title {
+        color: var(--dark-color);
+        border-bottom: 3px solid var(--primary-color);
+        padding-bottom: 10px;
+        margin-bottom: 25px;
+        font-weight: 700;
+    }
+    
+    .required {
+        color: #dc3545;
+    }
+    
+    .section-divider {
+        border-top: 1px solid #eee;
+        margin: 30px 0 20px 0;
+        padding-top: 20px;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container my-5">
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <div class="form-container">
+                <h2 class="section-title">
+                    <i class="fas fa-plus-circle me-2"></i>Add New Product
+                </h2>
+                
+                <form method="post" enctype="multipart/form-data" id="productForm">
+                    {% csrf_token %}
+                    
+                    <!-- Basic Information -->
+                    <div class="row">
+                        <div class="col-md-12">
+                            <div class="form-group">
+                                <label class="form-label">Product Name <span class="required">*</span></label>
+                                <input type="text" class="form-control" name="name" 
+                                       placeholder="Enter product name" required>
+                                <small class="text-muted">Choose a clear, descriptive name for your product</small>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label class="form-label">Category <span class="required">*</span></label>
+                                <select class="form-select" name="category" required>
+                                    <option value="">Select Category</option>
+                                    {% for category in form.category.field.queryset %}
+                                        <option value="{{ category.id }}">{{ category.name }}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label class="form-label">Brand</label>
+                                <select class="form-select" name="brand">
+                                    <option value="">Select Brand</option>
+                                    {% for brand in form.brand.field.queryset %}
+                                        <option value="{{ brand.id }}">{{ brand.name }}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label class="form-label">Description</label>
+                        <textarea class="form-control" name="description" rows="4" 
+                                  placeholder="Describe your product features, specifications, and benefits"></textarea>
+                        <small class="text-muted">Provide detailed information to help customers make informed decisions</small>
+                    </div>
+                    
+                    <!-- Pricing Section -->
+                    <div class="section-divider">
+                        <h4><i class="fas fa-tags me-2"></i>Pricing Information</h4>
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-md-4">
+                            <div class="form-group">
+                                <label class="form-label">Price (PKR) <span class="required">*</span></label>
+                                <input type="number" class="form-control" name="price" 
+                                       placeholder="0.00" step="0.01" min="0" required>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="form-group">
+                                <label class="form-label">Compare Price (PKR)</label>
+                                <input type="number" class="form-control" name="compare_price" 
+                                       placeholder="0.00" step="0.01" min="0">
+                                <small class="text-muted">Original price for discount display</small>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="form-group">
+                                <label class="form-label">Stock Quantity <span class="required">*</span></label>
+                                <input type="number" class="form-control" name="stock_quantity" 
+                                       placeholder="0" min="0" required>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Product Images -->
+                    <div class="section-divider">
+                        <h4><i class="fas fa-images me-2"></i>Product Images</h4>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label class="form-label">Upload Images</label>
+                        <div class="upload-area" id="uploadArea">
+                            <i class="fas fa-cloud-upload-alt fa-3x text-muted mb-3"></i>
+                            <h5>Drag & Drop Images Here</h5>
+                            <p class="text-muted">or click to browse files</p>
+                            <input type="file" name="images" id="imageInput" multiple accept="image/*" style="display: none;">
+                        </div>
+                        <div class="image-preview-container" id="imagePreviewContainer"></div>
+                        <small class="text-muted">Upload multiple high-quality images (JPEG, PNG, WebP). First image will be the main product image.</small>
+                    </div>
+                    
+                    <!-- Product Details -->
+                    <div class="section-divider">
+                        <h4><i class="fas fa-info-circle me-2"></i>Product Details</h4>
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label class="form-label">SKU</label>
+                                <input type="text" class="form-control" name="sku" 
+                                       placeholder="Product SKU/Code">
+                                <small class="text-muted">Unique product identifier</small>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label class="form-label">Weight (kg)</label>
+                                <input type="number" class="form-control" name="weight" 
+                                       placeholder="0.00" step="0.01" min="0">
+                                <small class="text-muted">Used for shipping calculations</small>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Product Status -->
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label class="form-label">Status</label>
+                                <select class="form-select" name="status">
+                                    <option value="draft">Draft</option>
+                                    <option value="active">Active</option>
+                                    <option value="inactive">Inactive</option>
+                                </select>
+                                <small class="text-muted">Draft products are not visible to customers</small>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <div class="form-check mt-4">
+                                    <input class="form-check-input" type="checkbox" name="is_featured">
+                                    <label class="form-check-label">
+                                        <strong>Featured Product</strong>
+                                    </label>
+                                    <br><small class="text-muted">Featured products appear on homepage</small>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- SEO Information -->
+                    <div class="section-divider">
+                        <h4><i class="fas fa-search me-2"></i>SEO Information</h4>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label class="form-label">Meta Title</label>
+                        <input type="text" class="form-control" name="meta_title" 
+                               placeholder="SEO optimized title">
+                        <small class="text-muted">Appears in search engine results (50-60 characters recommended)</small>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label class="form-label">Meta Description</label>
+                        <textarea class="form-control" name="meta_description" rows="2" 
+                                  placeholder="Brief description for search engines"></textarea>
+                        <small class="text-muted">Search engine snippet description (150-160 characters recommended)</small>
+                    </div>
+                    
+                    <!-- Action Buttons -->
+                    <div class="d-flex justify-content-between mt-4">
+                        <a href="{% url 'vendor_products' %}" class="btn-cancel">
+                            <i class="fas fa-arrow-left me-2"></i>Back to Products
+                        </a>
+                        <button type="submit" class="btn-save">
+                            <i class="fas fa-plus me-2"></i>Add Product
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    let selectedFiles = [];
+
+    // Upload area functionality
+    const uploadArea = document.getElementById('uploadArea');
+    const imageInput = document.getElementById('imageInput');
+    const previewContainer = document.getElementById('imagePreviewContainer');
+
+    uploadArea.addEventListener('click', () => imageInput.click());
+
+    uploadArea.addEventListener('dragover', (e) => {
+        e.preventDefault();
+        uploadArea.classList.add('dragover');
+    });
+
+    uploadArea.addEventListener('dragleave', () => {
+        uploadArea.classList.remove('dragover');
+    });
+
+    uploadArea.addEventListener('drop', (e) => {
+        e.preventDefault();
+        uploadArea.classList.remove('dragover');
+        handleFiles(e.dataTransfer.files);
+    });
+
+    imageInput.addEventListener('change', (e) => {
+        handleFiles(e.target.files);
+    });
+
+    function handleFiles(files) {
+        for (let file of files) {
+            if (file.type.startsWith('image/')) {
+                selectedFiles.push(file);
+                previewImage(file);
+            }
+        }
+    }
+
+    function previewImage(file) {
+        const reader = new FileReader();
+        reader.onload = (e) => {
+            const imageDiv = document.createElement('div');
+            imageDiv.className = 'image-preview';
+            imageDiv.innerHTML = `
+                <img src="${e.target.result}" alt="Preview">
+                <button class="remove-image" onclick="removeImage(this, '${file.name}')">
+                    <i class="fas fa-times"></i>
+                </button>
+            `;
+            previewContainer.appendChild(imageDiv);
+        };
+        reader.readAsDataURL(file);
+    }
+
+    function removeImage(button, fileName) {
+        selectedFiles = selectedFiles.filter(file => file.name !== fileName);
+        button.parentElement.remove();
+    }
+
+    // Auto-generate slug from name
+    $('input[name="name"]').on('input', function() {
+        const name = $(this).val();
+        const slug = name.toLowerCase()
+            .replace(/[^a-z0-9]+/g, '-')
+            .replace(/(^-|-$)/g, '');
+        $('input[name="slug"]').val(slug);
+    });
+
+    // Form validation
+    $('#productForm').submit(function(e) {
+        let isValid = true;
+        const errors = [];
+        
+        // Check required fields
+        $('input[required], select[required]').each(function() {
+            if (!$(this).val()) {
+                $(this).addClass('is-invalid');
+                errors.push(`${$(this).prev('label').text()} is required`);
+                isValid = false;
+            } else {
+                $(this).removeClass('is-invalid');
+            }
+        });
+        
+        // Validate price
+        const price = parseFloat($('input[name="price"]').val());
+        const comparePrice = parseFloat($('input[name="compare_price"]').val());
+        
+        if (comparePrice && comparePrice <= price) {
+            $('input[name="compare_price"]').addClass('is-invalid');
+            errors.push('Compare price should be higher than selling price');
+            isValid = false;
+        }
+        
+        if (!isValid) {
+            e.preventDefault();
+            alert('Please fix the following errors:\n\n' + errors.join('\n'));
+            $('html, body').animate({
+                scrollTop: $('.is-invalid').first().offset().top - 100
+            }, 500);
+        }
+    });
+
+    // Real-time validation
+    $('input, select, textarea').on('blur', function() {
+        if ($(this).prop('required') && !$(this).val()) {
+            $(this).addClass('is-invalid');
+        } else {
+            $(this).removeClass('is-invalid');
+        }
+    });
+
+    // Price formatting
+    $('input[name="price"], input[name="compare_price"]').on('input', function() {
+        let value = $(this).val();
+        if (value && !isNaN(value)) {
+            $(this).val(parseFloat(value).toFixed(2));
+        }
+    });
+</script>
+{% endblock %}

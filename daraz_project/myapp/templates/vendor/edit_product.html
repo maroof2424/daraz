@@ -1,0 +1,305 @@
+{% extends 'base.html' %}
+
+{% block title %}Edit Product - ShopMart{% endblock %}
+
+{% block extra_css %}
+<style>
+    .form-container {
+        background: white;
+        border-radius: 10px;
+        box-shadow: 0 2px 20px rgba(0,0,0,0.1);
+        padding: 30px;
+        margin: 20px 0;
+    }
+    
+    .form-group {
+        margin-bottom: 20px;
+    }
+    
+    .form-label {
+        font-weight: 600;
+        color: var(--dark-color);
+        margin-bottom: 8px;
+    }
+    
+    .form-control, .form-select {
+        border: 2px solid #e3e6f0;
+        border-radius: 8px;
+        padding: 12px 15px;
+        transition: all 0.3s ease;
+    }
+    
+    .form-control:focus, .form-select:focus {
+        border-color: var(--primary-color);
+        box-shadow: 0 0 0 0.2rem rgba(255, 107, 53, 0.25);
+    }
+    
+    .image-preview {
+        max-width: 200px;
+        max-height: 200px;
+        border-radius: 8px;
+        border: 2px dashed #ddd;
+        padding: 10px;
+        margin-top: 10px;
+    }
+    
+    .btn-save {
+        background: linear-gradient(45deg, var(--primary-color), var(--secondary-color));
+        border: none;
+        padding: 12px 30px;
+        border-radius: 25px;
+        font-weight: 600;
+        color: white;
+        transition: all 0.3s ease;
+    }
+    
+    .btn-save:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 5px 15px rgba(255, 107, 53, 0.4);
+        color: white;
+    }
+    
+    .btn-cancel {
+        background: #6c757d;
+        border: none;
+        padding: 12px 30px;
+        border-radius: 25px;
+        font-weight: 600;
+        color: white;
+        text-decoration: none;
+        display: inline-block;
+        transition: all 0.3s ease;
+    }
+    
+    .btn-cancel:hover {
+        background: #5a6268;
+        transform: translateY(-2px);
+        color: white;
+    }
+    
+    .section-title {
+        color: var(--dark-color);
+        border-bottom: 3px solid var(--primary-color);
+        padding-bottom: 10px;
+        margin-bottom: 25px;
+        font-weight: 700;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container my-5">
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <div class="form-container">
+                <h2 class="section-title">
+                    <i class="fas fa-edit me-2"></i>Edit Product
+                </h2>
+                
+                <form method="post" enctype="multipart/form-data">
+                    {% csrf_token %}
+                    
+                    <!-- Basic Information -->
+                    <div class="row">
+                        <div class="col-md-12">
+                            <div class="form-group">
+                                <label class="form-label">Product Name *</label>
+                                <input type="text" class="form-control" name="name" 
+                                       value="{{ product.name }}" required>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label class="form-label">Category *</label>
+                                <select class="form-select" name="category" required>
+                                    <option value="">Select Category</option>
+                                    {% for category in form.category.field.queryset %}
+                                        <option value="{{ category.id }}" 
+                                                {% if category.id == product.category.id %}selected{% endif %}>
+                                            {{ category.name }}
+                                        </option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label class="form-label">Brand</label>
+                                <select class="form-select" name="brand">
+                                    <option value="">Select Brand</option>
+                                    {% for brand in form.brand.field.queryset %}
+                                        <option value="{{ brand.id }}" 
+                                                {% if brand.id == product.brand.id %}selected{% endif %}>
+                                            {{ brand.name }}
+                                        </option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label class="form-label">Description</label>
+                        <textarea class="form-control" name="description" rows="4" 
+                                  placeholder="Enter product description">{{ product.description }}</textarea>
+                    </div>
+                    
+                    <!-- Pricing -->
+                    <div class="row">
+                        <div class="col-md-4">
+                            <div class="form-group">
+                                <label class="form-label">Price (PKR) *</label>
+                                <input type="number" class="form-control" name="price" 
+                                       value="{{ product.price }}" step="0.01" min="0" required>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="form-group">
+                                <label class="form-label">Compare Price (PKR)</label>
+                                <input type="number" class="form-control" name="compare_price" 
+                                       value="{{ product.compare_price }}" step="0.01" min="0">
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="form-group">
+                                <label class="form-label">Stock Quantity *</label>
+                                <input type="number" class="form-control" name="stock_quantity" 
+                                       value="{{ product.stock_quantity }}" min="0" required>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Product Images -->
+                    <div class="form-group">
+                        <label class="form-label">Product Images</label>
+                        <input type="file" class="form-control" name="images" multiple accept="image/*">
+                        <small class="text-muted">Select multiple images (JPEG, PNG, WebP)</small>
+                        
+                        {% if product.images.all %}
+                            <div class="row mt-3">
+                                {% for image in product.images.all %}
+                                    <div class="col-md-3 mb-2">
+                                        <img src="{{ image.image.url }}" class="img-fluid image-preview" alt="Product Image">
+                                    </div>
+                                {% endfor %}
+                            </div>
+                        {% endif %}
+                    </div>
+                    
+                    <!-- Product Details -->
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label class="form-label">SKU</label>
+                                <input type="text" class="form-control" name="sku" 
+                                       value="{{ product.sku }}" placeholder="Product SKU">
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label class="form-label">Weight (kg)</label>
+                                <input type="number" class="form-control" name="weight" 
+                                       value="{{ product.weight }}" step="0.01" min="0">
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Product Status -->
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label class="form-label">Status</label>
+                                <select class="form-select" name="status">
+                                    <option value="active" {% if product.status == 'active' %}selected{% endif %}>Active</option>
+                                    <option value="inactive" {% if product.status == 'inactive' %}selected{% endif %}>Inactive</option>
+                                    <option value="draft" {% if product.status == 'draft' %}selected{% endif %}>Draft</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <div class="form-check mt-4">
+                                    <input class="form-check-input" type="checkbox" name="is_featured" 
+                                           {% if product.is_featured %}checked{% endif %}>
+                                    <label class="form-check-label">
+                                        Featured Product
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- SEO Information -->
+                    <div class="form-group">
+                        <label class="form-label">Meta Title</label>
+                        <input type="text" class="form-control" name="meta_title" 
+                               value="{{ product.meta_title }}" placeholder="SEO Title">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label class="form-label">Meta Description</label>
+                        <textarea class="form-control" name="meta_description" rows="2" 
+                                  placeholder="SEO Description">{{ product.meta_description }}</textarea>
+                    </div>
+                    
+                    <!-- Action Buttons -->
+                    <div class="d-flex justify-content-between mt-4">
+                        <a href="{% url 'vendor_products' %}" class="btn-cancel">
+                            <i class="fas fa-arrow-left me-2"></i>Back to Products
+                        </a>
+                        <button type="submit" class="btn-save">
+                            <i class="fas fa-save me-2"></i>Update Product
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // Image preview functionality
+    $('input[name="images"]').change(function() {
+        const files = this.files;
+        const preview = $('.image-preview').parent();
+        
+        for (let i = 0; i < files.length; i++) {
+            const file = files[i];
+            const reader = new FileReader();
+            
+            reader.onload = function(e) {
+                const img = $('<img>').attr('src', e.target.result).addClass('img-fluid image-preview');
+                const col = $('<div>').addClass('col-md-3 mb-2').append(img);
+                preview.append(col);
+            };
+            
+            reader.readAsDataURL(file);
+        }
+    });
+    
+    // Form validation
+    $('form').submit(function(e) {
+        let isValid = true;
+        
+        // Check required fields
+        $('input[required], select[required]').each(function() {
+            if (!$(this).val()) {
+                $(this).addClass('is-invalid');
+                isValid = false;
+            } else {
+                $(this).removeClass('is-invalid');
+            }
+        });
+        
+        if (!isValid) {
+            e.preventDefault();
+            alert('Please fill in all required fields.');
+        }
+    });
+</script>
+{% endblock %}
